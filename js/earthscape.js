@@ -915,27 +915,46 @@ function resetChartSize() {
 }
 
 function refreshTimeline() {
-    let hash = getHash();
-    let scope = "country";
-    if (hash.scope) {
-        scope = hash.scope;
+  const hash = getHash();
+
+  // default scope
+  let scope = hash.scope || "country";
+
+  const chartVariableSelect = document.getElementById("chartVariable");
+  const chartVariable =
+    chartVariableSelect?.options?.[chartVariableSelect.selectedIndex]?.value || "";
+
+  // If RealityStream sent us here to pick a feature/target,
+  // DO NOT overwrite features.dcid. Return selection in rsDcid instead.
+  if (hash.rsRole) {
+    // store the picked dcid for RealityStream to read
+    updateHash({ scope: scope, rsDcid: chartVariable });
+
+    // optional: if your RealityStream uses a callback to immediately navigate back
+    if (typeof window.rsReturnSelectedDcid === "function") {
+      window.rsReturnSelectedDcid(chartVariable);
+      return;
     }
-    let chartVariableSelect = document.getElementById('chartVariable');        
-    let chartVariable = chartVariableSelect.options[chartVariableSelect.selectedIndex].value;
-    updateHash({"scope":scope,"features.dcid":chartVariable}); // Used by refreshTimeline()
+  } else {
+    // Normal Timeline behavior (not coming from RealityStream)
+    updateHash({ scope: scope, "features.dcid": chartVariable });
+  }
 
-            let showAll = document.querySelector('input[name="whichLines"]:checked').value;
-            if(!showAll) {showAll = 'showTop5';}
+  let showAll = document.querySelector('input[name="whichLines"]:checked')?.value;
+  if (!showAll) showAll = "showTop5";
 
-            let entityIdSelect = document.getElementById('entityId');
-            let entityId = entityIdSelect.options[entityIdSelect.selectedIndex].value;
-            let chartText = document.getElementById('chartVariable').options[document.getElementById('chartVariable').selectedIndex].text;
+  const entityIdSelect = document.getElementById("entityId");
+  const entityId =
+    entityIdSelect?.options?.[entityIdSelect.selectedIndex]?.value || "";
 
-            //alert(chartVariable + " " + chartText)
-            getTimelineChart(scope, chartVariable, entityId, showAll, chartText);
-        //},3000);
-    //});
+  const chartText =
+    document.getElementById("chartVariable")?.options?.[
+      document.getElementById("chartVariable").selectedIndex
+    ]?.text || "";
+
+  getTimelineChart(scope, chartVariable, entityId, showAll, chartText);
 }
+
 function updateScopeOptions(availableScopes) {
     waitForElm('#selectScope').then((elm) => {
         $("#selectScope option").each(function () {

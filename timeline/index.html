@@ -77,7 +77,8 @@ function addFolderToHash(hashStr) {
   if (params.get("folder")) return params.toString();
 
   // Prefer dcid, fallback to path
-  const dcid = decodeURIComponent(params.get("features.dcid") || "");
+  const dcid = decodeURIComponent(params.get("rsDcid") || params.get("features.dcid") || "");
+
   const path = decodeURIComponent(params.get("features.path") || "");
 
   const source = dcid || path;
@@ -86,6 +87,36 @@ function addFolderToHash(hashStr) {
   params.set("folder", folder);
   return params.toString();
 }
+
+function addRsReturnSelection(hashStr) {
+  const params = new URLSearchParams(hashStr || "");
+
+  // Only do the RealityStream return behavior if RealityStream launched us
+  if (!params.get("rsRole")) return params.toString();
+
+  // Use the selected dropdown value (chartVariable) if available
+  const sel = document.getElementById("chartVariable");
+  const picked = sel && sel.value ? sel.value : (params.get("features.dcid") || "");
+
+  // Always send the chosen dcid back
+  params.set("rsDcid", picked);
+
+  // Send a path too ONLY if we already have one in the hash
+  // (timeline doesn't know a CSV path unless you explicitly put it there)
+  const existingPath =
+    params.get("rsPath") ||
+    params.get("features.path") ||
+    params.get("targets.path") ||
+    "";
+
+  if (existingPath) params.set("rsPath", existingPath);
+  else params.delete("rsPath");
+
+  return params.toString();
+}
+
+
+
 </script>
 
 <style>
@@ -484,9 +515,11 @@ function addFolderToHash(hashStr) {
 
   <div style="float:right">
    <div class="local btn btn-primary"
-     onclick="location.href='/realitystream/#' + addFolderToHash(window.location.hash.substr(1)); return false;">
+  onclick="location.href='/realitystream/#' + addFolderToHash(addRsReturnSelection(window.location.hash.substr(1))); return false;">
   RealityStream
 </div>
+
+
 
   </div>
   <div style="overflow:visible;">
