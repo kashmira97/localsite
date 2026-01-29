@@ -6045,9 +6045,15 @@ let earthFooter = false;
 let showLeftIcon = false;
 if(typeof param=='undefined'){ var param={}; }
 
-if (window.location.protocol != 'https:' && location.host.indexOf('localhost') < 0) {
-    location.href = location.href.replace("http://", "https://"); // Leave http
+const isLocal =
+  location.hostname === 'localhost' ||
+  location.hostname === '127.0.0.1' ||
+  location.hostname === '[::1]';
+
+if (window.location.protocol !== 'https:' && !isLocal) {
+  location.href = location.href.replace("http://", "https://");
 }
+
 // Get the levels below root
 var foldercount = (location.pathname.split('/').length - 1); // - (location.pathname[location.pathname.length - 1] == '/' ? 1 : 0) // Removed because ending with slash or filename does not effect levels. Increased -1 to -2.
 foldercount = foldercount - 2;
